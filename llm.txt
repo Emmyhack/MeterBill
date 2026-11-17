@@ -1,0 +1,8 @@
+# Light Bill Calculator
+Purpose: calculate shared electricity bills locally and export a clean PNG.
+Privacy: no authentication, backend calculation, analytics, or reading uploads.
+Financial truth: web/src/lib/calculations.ts and allocations.ts.
+Rounding: HALF_UP to kobo per row; shared totals use deterministic largest remainder; optional nearest-₦100 is last.
+Host: Go net/http embeds web/dist and exposes GET /healthz.
+Commands: make test, make build, make run.
+

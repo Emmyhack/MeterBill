@@ -1,0 +1,17 @@
+import { describe, expect, it } from 'vitest'
+import { calculateBill } from '../src/lib/calculations'
+import { allocateLargestRemainder } from '../src/lib/allocations'
+import { Decimal } from '../src/lib/decimal'
+import { sampleDocument } from '../src/lib/document'
+
+describe('financial calculations', () => {
+  it('matches the supplied 62.3 kWh sample fixture', () => { const result = calculateBill(sampleDocument()); expect(result.totalConsumption).toBe('62.3'); expect(result.energySubtotalMinor).toBe(1415892n); expect(result.grandTotalMinor).toBe(1415892n) })
+  it('immediately recomputes a changed tariff', () => { const document = sampleDocument(); document.ratePerKwh = '250.00'; const result = calculateBill(document); expect(result.rows[0]!.energyMinor).toBe(162500n); expect(result.energySubtotalMinor).toBe(1557500n) })
+  it('distinguishes shared from per-unit charges by ₦7,000', () => { const shared = sampleDocument(); shared.charges = [{ id:'c', description:'Charge', amount:'1000', applicationMode:'shared_equal' }]; const perUnit = structuredClone(shared); perUnit.charges[0]!.applicationMode = 'per_unit'; expect(calculateBill(perUnit).grandTotalMinor - calculateBill(shared).grandTotalMinor).toBe(700000n) })
+  it('allocates residual minor units exactly and deterministically', () => { const value = allocateLargestRemainder(10000n, ['a','b','c'], [new Decimal(1),new Decimal(1),new Decimal(1)]); expect(value).toEqual({a:3334n,b:3333n,c:3333n}); expect(Object.values(value).reduce((a,b)=>a+b,0n)).toBe(10000n) })
+  it('supports single unit and multiple charges', () => { const document = sampleDocument(); document.charges = [{ id:'one', description:'Repair', amount:'123.45', applicationMode:'single_unit', targetRowId:document.rows[2]!.id },{id:'all',description:'Tax',amount:'10',applicationMode:'per_unit'}]; const result=calculateBill(document); expect(result.rows[2]!.extraMinor).toBe(13345n); expect(result.rows[0]!.extraMinor).toBe(1000n) })
+  it('allocates by usage and rejects all-zero usage', () => { const document=sampleDocument(); document.charges=[{id:'c',description:'Loss',amount:'1000',applicationMode:'shared_consumption'}]; const result=calculateBill(document); expect(Object.values(result.allocations.c!).reduce((a,b)=>a+b,0n)).toBe(100000n); document.rows.forEach(row=>{row.newReading='0';row.oldReading='0'}); expect(calculateBill(document).errors[0]).toMatch(/all usage is zero/) })
+  it('validates negative consumption and blanks without treating them as zero', () => { const document=sampleDocument(); document.rows[0]!.newReading=''; document.rows[1]!.newReading='1'; expect(calculateBill(document).errors.join(' ')).toMatch(/must be a non-negative/); expect(calculateBill(document).errors.join(' ')).toMatch(/cannot be less/) })
+  it('rounds half-up and exposes nearest-100 adjustments', () => { const document=sampleDocument(); document.rows=document.rows.slice(0,1); document.rows[0]!.newReading='18.4'; document.rows[0]!.oldReading='11.9'; expect(calculateBill(document).rows[0]!.energyMinor).toBe(147726n); document.roundingPolicy='nearest_100'; const result=calculateBill(document); expect(result.grandTotalMinor).toBe(150000n); expect(result.roundingAdjustmentMinor).toBe(2274n) })
+  it('tracks payment separately from billed total', () => { const document=sampleDocument(); document.rows[0]!.amountPaid='500'; const result=calculateBill(document); expect(result.grandTotalMinor).toBe(1415892n); expect(result.totalPaidMinor).toBe(50000n); expect(result.balanceMinor).toBe(1365892n) })
+})
