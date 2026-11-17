@@ -26,6 +26,8 @@ export function minorToString(value: bigint): string {
 export function formatMinor(value: bigint): string {
   const decimal = minorToString(value)
   const [whole, fraction] = decimal.split('.') as [string, string]
-  return `₦${Number(whole).toLocaleString('en-NG')}.${fraction}`
+  const sign = whole.startsWith('-') ? '-' : ''
+  const digits = sign ? whole.slice(1) : whole
+  const grouped = digits.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  return `₦${sign}${grouped}.${fraction}`
 }
-

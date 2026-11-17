@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { BillDocument, Charge, ChargeMode } from './types'
 import { calculateBill } from './lib/calculations'
-import { formatMinor } from './lib/decimal'
+import { formatMinor, parseDecimal } from './lib/decimal'
 import { emptyRow, makeId, newDocument, sampleDocument } from './lib/document'
 import { clearDraft, loadDraft, saveDraft } from './lib/persistence'
 import { downloadPng, exportFilename } from './lib/exportPng'
@@ -37,7 +37,7 @@ export default function App() {
     <label>Collection rounding<select value={document.roundingPolicy} onChange={e => update({ roundingPolicy: e.target.value as BillDocument['roundingPolicy'] })}><option value="minor_unit">Exact to nearest kobo (default)</option><option value="nearest_100">Round each unit to nearest ₦100</option></select></label>
   </div></section>
   <section className="panel"><div className="section-heading"><div><p className="step">02 · METER READINGS</p><h2>Units and usage</h2></div><button onClick={() => update({ rows: [...document.rows, emptyRow()] })}>+ Add unit</button></div>
-    <div className="table-wrap"><table className="readings"><thead><tr><th>Unit</th><th>New reading</th><th>Old reading</th><th>Units used</th><th>Energy cost</th><th>Extras</th><th>Total bill</th><th>Amount paid</th><th><span className="sr-only">Actions</span></th></tr></thead><tbody>{document.rows.map((row, index) => { const value = result.rows[index]!; const rowError = row.newReading && row.oldReading && Number(row.newReading) < Number(row.oldReading); return <tr key={row.id}>
+    <div className="table-wrap"><table className="readings"><thead><tr><th>Unit</th><th>New reading</th><th>Old reading</th><th>Units used</th><th>Energy cost</th><th>Extras</th><th>Total bill</th><th>Amount paid</th><th><span className="sr-only">Actions</span></th></tr></thead><tbody>{document.rows.map((row, index) => { const value = result.rows[index]!; let rowError = false; try { rowError = Boolean(row.newReading && row.oldReading && parseDecimal(row.newReading, 'reading').lt(parseDecimal(row.oldReading, 'reading'))) } catch { /* calculation engine reports the detailed validation */ } return <tr key={row.id}>
       <td data-label="Unit"><input aria-label={`Unit ${index + 1} name`} value={row.label} maxLength={60} onChange={e => updateRow(index, 'label', e.target.value)}/>{!row.label.trim() && <small className="error">Name required</small>}{duplicateLabels.has(row.label.toLowerCase()) && <small className="warning">Duplicate name</small>}</td>
       <td data-label="New reading"><input aria-label={`${row.label} new reading`} inputMode="decimal" value={row.newReading} maxLength={19} onChange={e => updateRow(index, 'newReading', e.target.value)}/>{rowError && <small className="error">Must be ≥ old</small>}</td>
       <td data-label="Old reading"><input aria-label={`${row.label} old reading`} inputMode="decimal" value={row.oldReading} maxLength={19} onChange={e => updateRow(index, 'oldReading', e.target.value)}/></td>
