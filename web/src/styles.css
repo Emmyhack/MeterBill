@@ -10,3 +10,38 @@ main { max-width:1440px; margin:auto; padding:0 clamp(1rem,4vw,3rem) 4rem }.pane
 @media print { body>* { display:none!important }.export-shell { display:block!important; position:static; width:auto }.export-bill { width:100%; min-height:0; padding:20px } }
 @media(prefers-reduced-motion:reduce) { * { scroll-behavior:auto!important; transition:none!important; animation:none!important } }
 
+/* Phone-first refinements: keep the primary entry flow compact without hiding data. */
+@media (max-width: 600px) {
+  body { overflow-x: hidden; }
+  .app-header { gap: .8rem; padding: 1rem .85rem .8rem; }
+  .app-header h1 { font-size: 1.55rem; }
+  .app-header p { font-size: .86rem; }
+  .app-header nav { width: 100%; display: grid; grid-template-columns: 1fr 1fr auto; gap: .45rem; }
+  .app-header nav .primary { grid-column: 1 / -1; order: -1; }
+  .app-header nav button { min-height: 44px; padding: .6rem .65rem; }
+  main { padding: 0 .75rem 2rem; }
+  .panel { padding: .9rem; margin-bottom: .75rem; }
+  .section-heading { margin-bottom: .8rem; }
+  .section-heading h2, .summary h2 { font-size: 1.1rem; }
+  .section-heading > button { min-height: 42px; }
+  .form-grid { gap: .7rem; }
+  input, select, textarea { min-height: 44px; font-size: 16px; }
+  .readings tr { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .1rem .35rem; }
+  .readings td { min-width: 0; padding: .3rem .2rem; }
+  .readings td:first-child { grid-column: 1 / -1; }
+  .readings td:first-child input, .readings input { min-width: 0; width: 100%; }
+  .readings td:nth-child(4), .readings td:nth-child(5), .readings td:nth-child(6), .readings td:nth-child(7) { padding-top: .55rem; }
+  .readings td:nth-child(7) { border-top: 1px solid var(--line); }
+  .readings .row-actions { grid-column: 1 / -1; justify-content: flex-end; border-top: 1px solid var(--line); margin-top: .35rem; padding-top: .55rem; }
+  .row-actions button { min-width: 40px; min-height: 40px; }
+  .charge-card { padding: .75rem; }
+  .charge-preview { margin-top: .65rem; font-size: .8rem; }
+  .summary { gap: 1rem; margin: .75rem 0; padding: 1rem; }
+  .summary dl { gap: .35rem; }
+  .summary dl div { padding: .45rem .55rem; }
+  .summary dd { font-size: .95rem; }
+  .summary .grand dd { font-size: 1.35rem; }
+  .actions { gap: .65rem; margin-top: .8rem; }
+  .actions div { gap: .4rem; }
+  .actions button { min-height: 44px; padding-inline: .55rem; }
+}
