@@ -4,7 +4,6 @@ web/dist/
 web/playwright-report/
 web/test-results/
 .pnpm-store/
-internal/frontend/dist/assets/
 web/vite.config.js
 web/playwright.config.js
 web/vite.config.d.ts
