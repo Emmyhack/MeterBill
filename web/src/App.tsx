@@ -6,6 +6,7 @@ import { emptyRow, makeId, newDocument, sampleDocument } from './lib/document'
 import { clearDraft, loadDraft, saveDraft } from './lib/persistence'
 import { downloadPng, exportFilename } from './lib/exportPng'
 import { ExportBill } from './components/ExportBill'
+import { Analytics } from '@vercel/analytics/react'
 
 const modeNames: Record<ChargeMode, string> = { per_unit: 'Per unit', shared_equal: 'Shared equally', single_unit: 'Single unit', shared_consumption: 'By consumption' }
 const modeHelp: Record<ChargeMode, string> = { per_unit: 'The amount is added separately to every included unit.', shared_equal: 'One total amount is split equally across all units.', single_unit: 'The whole amount is billed to one selected unit.', shared_consumption: 'One total is split in proportion to electricity used.' }
@@ -50,5 +51,5 @@ export default function App() {
   <section className="summary"><div><p className="step">04 · SUMMARY</p><h2>Bill overview</h2><p>At ₦{document.ratePerKwh || '—'} per kWh · {document.roundingPolicy === 'minor_unit' ? 'rounded HALF_UP to kobo per unit' : 'each unit rounded to nearest ₦100 after extras'}</p></div><dl><div><dt>Total units</dt><dd>{result.totalConsumption} kWh</dd></div><div><dt>Electricity</dt><dd>{formatMinor(result.energySubtotalMinor)}</dd></div><div><dt>Added charges</dt><dd>{formatMinor(result.chargesSubtotalMinor)}</dd></div>{document.roundingPolicy === 'nearest_100' && <div><dt>Rounding adjustment</dt><dd>{formatMinor(result.roundingAdjustmentMinor)}</dd></div>}<div className="grand"><dt>Total payable</dt><dd>{formatMinor(result.grandTotalMinor)}</dd></div><div><dt>Paid</dt><dd>{formatMinor(result.totalPaidMinor)}</dd></div><div><dt>Outstanding</dt><dd>{formatMinor(result.balanceMinor)}</dd></div></dl></section>
   {result.errors.length > 0 && <section className="validation" role="alert"><strong>Please fix these items:</strong><ul>{[...new Set(result.errors)].map(error => <li key={error}>{error}</li>)}</ul></section>}
   <section className="actions"><div><button className="primary" onClick={doExport} disabled={exporting}>Download PNG</button><button onClick={() => print()}>Print</button><button onClick={copySummary}>Copy summary</button></div><div><button onClick={() => { saveDraft(document); setNotice('Draft saved locally.') }}>Save draft</button><button className="danger" onClick={() => { if (confirm('Clear the saved draft from this device?')) { clearDraft(); setNotice('Saved draft cleared. Current bill remains open.') } }}>Clear draft</button></div></section><p className="status" role="status">{notice}</p>
-  </main><ExportBill document={document} result={result} exportRef={exportRef}/></>
+  </main><ExportBill document={document} result={result} exportRef={exportRef}/><Analytics /></>
 }
